@@ -8,14 +8,16 @@ function getRandomName(): string {
 }
 
 class Clock extends React.Component<{
-  name: string;
   setIsVisible: (visible: boolean) => void;
   isVisible: boolean;
 }> {
   private timerId: NodeJS.Timeout | undefined;
 
+  private nameIntervalId: NodeJS.Timeout | undefined;
+
   state = {
     currentTime: new Date().toUTCString().slice(-12, -4),
+    clockName: 'Clock-0',
   };
 
   componentDidMount() {
@@ -27,6 +29,15 @@ class Clock extends React.Component<{
       console.log(currentTime);
     }, 1000);
 
+    this.nameIntervalId = setInterval(() => {
+      const oldName = this.state.clockName;
+      const newName = getRandomName();
+
+      // eslint-disable-next-line no-console
+      console.warn(`Renamed from ${oldName} to ${newName}`);
+      this.setState({ clockName: newName });
+    }, 3300);
+
     document.addEventListener('contextmenu', this.handleContextMenu);
     document.addEventListener('click', this.handleClick);
   }
@@ -34,6 +45,10 @@ class Clock extends React.Component<{
   componentWillUnmount() {
     if (this.timerId) {
       clearInterval(this.timerId);
+    }
+
+    if (this.nameIntervalId) {
+      clearInterval(this.nameIntervalId);
     }
 
     document.removeEventListener('contextmenu', this.handleContextMenu);
@@ -52,7 +67,7 @@ class Clock extends React.Component<{
   render() {
     return this.props.isVisible ? (
       <div className="Clock">
-        <strong className="Clock__name">{this.props.name}</strong>
+        <strong className="Clock__name">{this.state.clockName}</strong>
         {' time is '}
         <span className="Clock__time">{this.state.currentTime}</span>
       </div>
@@ -61,30 +76,12 @@ class Clock extends React.Component<{
 }
 
 class App extends React.Component {
-  private intervalId: NodeJS.Timeout | undefined;
-
   state = {
-    clockName: 'Clock-0',
     isVisible: true,
   };
 
-  componentDidMount() {
-    this.intervalId = setInterval(() => {
-      const oldName = this.state.clockName;
-      const newName = getRandomName();
-
-      // eslint-disable-next-line no-console
-      console.warn(`Renamed from ${oldName} to ${newName}`);
-      this.setState({ clockName: newName });
-    }, 3300);
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.intervalId);
-  }
-
   setIsVisible = (visible: boolean) => {
-    this.setState({ IsVisible: visible });
+    this.setState({ isVisible: visible });
   };
 
   render() {
@@ -92,7 +89,6 @@ class App extends React.Component {
       <div className="App">
         <h1>React clock</h1>
         <Clock
-          name={this.state.clockName}
           setIsVisible={this.setIsVisible}
           isVisible={this.state.isVisible}
         />
