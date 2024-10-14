@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import './App.scss';
 
 function getRandomName(): string {
@@ -7,88 +7,98 @@ function getRandomName(): string {
   return `Clock-${value}`;
 }
 
-const Clock: React.FC<{
+class Clock extends React.Component<{
   name: string;
   setIsVisible: (visible: boolean) => void;
   isVisible: boolean;
-}> = ({ name, setIsVisible, isVisible }) => {
-  const [currentTime, setCurrentTime] = useState(
-    new Date().toUTCString().slice(-12, -4),
-  );
+}> {
+  private timerId: NodeJS.Timeout | undefined;
 
-  useEffect(() => {
-    const timerId = setInterval(() => {
-      const time = new Date().toUTCString().slice(-12, -4);
+  state = {
+    currentTime: new Date().toUTCString().slice(-12, -4),
+  };
 
-      setCurrentTime(time);
+  componentDidMount() {
+    this.timerId = setInterval(() => {
+      const currentTime = new Date().toUTCString().slice(-12, -4);
 
+      this.setState({ currentTime });
       // eslint-disable-next-line no-console
-      console.log(time);
+      console.log(currentTime);
     }, 1000);
 
-    const handleContextMenu = (event: MouseEvent) => {
-      event.preventDefault();
-      setIsVisible(false);
-    };
+    document.addEventListener('contextmenu', this.handleContextMenu);
+    document.addEventListener('click', this.handleClick);
+  }
 
-    const handleClick = () => {
-      setIsVisible(true);
-    };
+  componentWillUnmount() {
+    if (this.timerId) {
+      clearInterval(this.timerId);
+    }
 
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('click', handleClick);
+    document.removeEventListener('contextmenu', this.handleContextMenu);
+    document.removeEventListener('click', this.handleClick);
+  }
 
-    return () => {
-      clearInterval(timerId);
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('click', handleClick);
-    };
-  }, [setIsVisible]);
+  handleContextMenu = (event: MouseEvent) => {
+    event.preventDefault();
+    this.props.setIsVisible(false);
+  };
 
-  return isVisible ? (
-    <div className="Clock">
-      <strong className="Clock__name">{name}</strong>
-      {'time is '}
-      <span className="Clock__time">{currentTime}</span>
-    </div>
-  ) : null;
-};
+  handleClick = () => {
+    this.props.setIsVisible(true);
+  };
 
-const App: React.FC = () => {
-  const [clockName, setClockName] = useState('Clock-0');
-  const [isVisible, setIsVisible] = useState(true);
+  render() {
+    return this.props.isVisible ? (
+      <div className="Clock">
+        <strong className="Clock__name">{this.props.name}</strong>
+        {' time is '}
+        <span className="Clock__time">{this.state.currentTime}</span>
+      </div>
+    ) : null;
+  }
+}
 
-  useEffect(() => {
-    const updateClockName = () => {
+class App extends React.Component {
+  private intervalId: NodeJS.Timeout | undefined;
+
+  state = {
+    clockName: 'Clock-0',
+    isVisible: true,
+  };
+
+  componentDidMount() {
+    this.intervalId = setInterval(() => {
+      const oldName = this.state.clockName;
       const newName = getRandomName();
 
       // eslint-disable-next-line no-console
-      console.warn(`Renamed to ${newName}`);
-
-      setClockName(newName);
-    };
-
-    const intervalId = setInterval(() => {
-      if (isVisible) {
-        updateClockName();
-      }
+      console.warn(`Renamed from ${oldName} to ${newName}`);
+      this.setState({ clockName: newName });
     }, 3300);
+  }
 
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [isVisible]);
+  componentWillUnmount() {
+    clearInterval(this.intervalId);
+  }
 
-  return (
-    <div className="App">
-      <h1>React clock</h1>
-      <Clock
-        name={clockName}
-        setIsVisible={setIsVisible}
-        isVisible={isVisible}
-      />
-    </div>
-  );
-};
+  setIsVisible = (visible: boolean) => {
+    this.setState({ IsVisible: visible });
+  };
+
+  render() {
+    return (
+      <div className="App">
+        <h1>React clock</h1>
+        <Clock
+          name={this.state.clockName}
+          setIsVisible={this.setIsVisible}
+          isVisible={this.state.isVisible}
+        />
+      </div>
+    );
+  }
+}
 
 export default App;
