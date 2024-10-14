@@ -6,15 +6,22 @@ function getRandomName(): string {
   return `Clock-${value}`;
 }
 
-class Clock extends React.Component<{
+interface Props {
   setIsVisible: (visible: boolean) => void;
   isVisible: boolean;
-}> {
+}
+
+interface State {
+  currentTime: string;
+  clockName: string;
+}
+
+export class Clock extends React.Component<Props, State> {
   private timerId: NodeJS.Timeout | undefined;
 
   private nameIntervalId: NodeJS.Timeout | undefined;
 
-  state = {
+  state: State = {
     currentTime: new Date().toUTCString().slice(-12, -4),
     clockName: 'Clock-0',
   };
@@ -39,6 +46,13 @@ class Clock extends React.Component<{
 
     document.addEventListener('contextmenu', this.handleContextMenu);
     document.addEventListener('click', this.handleClick);
+  }
+
+  componentDidUpdate(prevProps: Readonly<Props>) {
+    if (prevProps.isVisible !== this.props.isVisible && !this.props.isVisible) {
+      // eslint-disable-next-line no-console
+      console.warn(`Clock is hidden. Last name was ${this.state.clockName}`);
+    }
   }
 
   componentWillUnmount() {

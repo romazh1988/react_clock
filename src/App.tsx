@@ -4,6 +4,7 @@ import Clock from './Clock';
 
 class App extends React.Component {
   state = {
+    clockName: 'Clock-0',
     isVisible: true,
   };
 
