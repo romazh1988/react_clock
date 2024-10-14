@@ -1,28 +1,54 @@
 import React from 'react';
 import './App.scss';
-import Clock from './Clock';
+import { Clock } from './Clock';
 
-class App extends React.Component {
-  state = {
+function getRandomName(): string {
+  const value = Date.now().toString().slice(-4);
+
+  return `Clock-${value}`;
+}
+
+interface State {
+  clockName: string;
+  today: Date;
+  hasClock: boolean;
+}
+export class App extends React.Component<{}, State> {
+  state: State = {
     clockName: 'Clock-0',
-    isVisible: true,
+    today: new Date(),
+    hasClock: true,
   };
 
-  setIsVisible = (visible: boolean) => {
-    this.setState({ isVisible: visible });
+  timerClockId = 0;
+
+  handleClockHide = (event: MouseEvent) => {
+    event.preventDefault();
+    this.setState({ hasClock: false });
   };
+
+  handleClockShow = () => {
+    this.setState({ hasClock: true });
+  };
+
+  componentDidMount() {
+    this.timerClockId = window.setInterval(() => {
+      this.setState({ clockName: getRandomName() });
+    }, 3300);
+    document.addEventListener('contextmenu', this.handleClockHide);
+    document.addEventListener('click', this.handleClockShow);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerClockId);
+  }
 
   render() {
     return (
       <div className="App">
-        <h1>React clock</h1>
-        <Clock
-          setIsVisible={this.setIsVisible}
-          isVisible={this.state.isVisible}
-        />
+        <h1>React clock</h1>{' '}
+        {this.state.hasClock && <Clock name={this.state.clockName} />}
       </div>
     );
   }
 }
-
-export default App;
